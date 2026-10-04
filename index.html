@@ -45,13 +45,13 @@
     border:1px solid var(--line);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
     box-shadow:0 22px 60px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.05)}
   .dock.hidden{opacity:0;transform:translate(-50%,140%);pointer-events:none}
-  .handle{position:absolute;left:50%;bottom:16px;transform:translate(-50%,0);pointer-events:auto;cursor:pointer;
+  .handle{position:absolute;left:clamp(14px,2.6vw,32px);bottom:16px;pointer-events:auto;cursor:pointer;
     display:flex;align-items:center;gap:9px;font:inherit;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
     color:var(--dim);background:linear-gradient(180deg,rgba(14,22,32,.82),rgba(6,11,17,.88));
     border:1px solid var(--line);border-radius:999px;padding:9px 16px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
     box-shadow:0 14px 34px rgba(0,0,0,.5);transition:opacity .35s ease, transform .35s ease, color .2s, border-color .2s}
   .handle:hover{color:var(--ink);border-color:rgba(150,220,255,.45)}
-  .handle.hidden{opacity:0;transform:translate(-50%,16px);pointer-events:none}
+  .handle.hidden{opacity:0;transform:translateY(16px);pointer-events:none}
   .handle b{color:#9fe9ff;font-size:13px;font-weight:600}
   .grp{display:flex;align-items:center;gap:12px;flex:1 1 230px;min-width:210px}
   .grp label{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);white-space:nowrap}
@@ -102,6 +102,12 @@
     border:2px solid #0b1620;border-radius:6px;
     box-shadow:0 0 0 3px rgba(92,225,255,.4), 0 10px 30px rgba(0,0,0,.6);padding:0 8px}
   .inline-edit:focus{outline:none}
+  .swatches{position:absolute;z-index:9;display:flex;gap:6px;padding:7px 9px;transform:translateX(-50%);
+    background:rgba(6,11,17,.92);border:1px solid var(--line);border-radius:12px;
+    box-shadow:0 10px 30px rgba(0,0,0,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+  .sw{width:24px;height:24px;border-radius:7px;border:1px solid rgba(255,255,255,.3);cursor:pointer;padding:0}
+  .sw:hover{transform:scale(1.12)}
+  .sw.on{outline:2px solid #9fe9ff;outline-offset:1px}
 
   body.touch-mode .del, body.touch-mode .ren{opacity:1}
 
@@ -438,7 +444,10 @@ function plateGeom(i){
     Math.abs(dir.x) > 1e-4 ? (w / 2) / Math.abs(dir.x) : 1e9,
     Math.abs(dir.y) > 1e-4 ? (h / 2) / Math.abs(dir.y) : 1e9
   );
-  var W = { x: pc.x + dir.x * (t + 6), y: pc.y + dir.y * (t + 6) };
+  /* khoen nối dây nằm CHÍNH GIỮA mép bảng hướng về tâm */
+  var horiz = Math.abs(dir.x) >= Math.abs(dir.y);
+  var W = horiz ? { x: pc.x + (dir.x > 0 ? 1 : -1) * (w / 2 + 2), y: pc.y }
+                : { x: pc.x, y: pc.y + (dir.y > 0 ? 1 : -1) * (h / 2 + 2) };
   var u = norm2({ x: W.x - g.ring.x, y: W.y - g.ring.y });
   var off = { x: -u.y, y: u.x }, k = ringScale(n), rh = RHOOK * k;
   var S = { x: g.ring.x + u.x * rh + off.x * HOOK_OFF * k, y: g.ring.y + u.y * rh + off.y * HOOK_OFF * k };
@@ -635,9 +644,10 @@ function buildSVG(names, angles, T){
   var editing = null;
   function closeEditor(){
     if (!editing) return;
-    var el = editing.el;
+    var el = editing.el, sw = editing.sw;
     editing = null;
     try{ if (el && el.parentNode) el.parentNode.removeChild(el); }catch(e){}
+    try{ if (sw && sw.parentNode) sw.parentNode.removeChild(sw); }catch(e){}
   }
   function openEditor(i){
     closeEditor();
@@ -660,7 +670,29 @@ function buildSVG(names, angles, T){
     inp.style.background = 'linear-gradient(180deg,' + st[0] + ',' + st[1] + ' 30%,' + st[2] + ' 62%,' + st[3] + ')';
     if (g.rot) inp.style.transform = 'rotate(' + g.rot + 'deg)';
     stage.appendChild(inp);
-    editing = { i: i, el: inp };
+    /* dãy chọn màu nền cho bảng */
+    var sw = document.createElement('div');
+    sw.className = 'swatches';
+    sw.style.left = cx + 'px';
+    sw.style.top = (cy + h / 2 + 10) + 'px';
+    PAL.forEach(function(stz, k){
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'sw' + (k === (state.anchors[i].tone | 0) ? ' on' : '');
+      b.style.background = 'linear-gradient(180deg,' + stz[0] + ',' + stz[2] + ')';
+      b.title = 'Chọn màu ' + (k + 1);
+      b.addEventListener('pointerdown', function(ev){ ev.preventDefault(); ev.stopPropagation(); });
+      b.addEventListener('click', function(ev){
+        ev.stopPropagation();
+        state.anchors[i].tone = k;
+        sw.querySelectorAll('.sw').forEach(function(x){ x.classList.remove('on'); });
+        b.classList.add('on');
+        inp.style.background = 'linear-gradient(180deg,' + stz[0] + ',' + stz[1] + ' 30%,' + stz[2] + ' 62%,' + stz[3] + ')';
+        render();
+      });
+      sw.appendChild(b);
+    });
+    stage.appendChild(sw);
+    editing = { i: i, el: inp, sw: sw };
     inp.focus(); inp.select();
     var orig = state.anchors[i].name;
     function commit(ok){
@@ -806,5 +838,5 @@ function buildSVG(names, angles, T){
   if (!reduceMotion) requestAnimationFrame(frame);
 })();
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a45491f638456aba',t:'MTc5MTEyMDkzMA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a454a2e1dd03ddc5',t:'MTc5MTEyMTYyMw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
