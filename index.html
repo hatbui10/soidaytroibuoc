@@ -37,7 +37,7 @@
     border-top:1px solid var(--line);padding-top:9px;margin-top:-2px;line-height:1.5}
   .hintbar b{color:#9fe9ff;font-weight:600}
 
-  .dock{position:absolute;left:50%;bottom:clamp(14px,2.6vw,32px);transform:translate(-50%,0);
+  .dock{position:absolute;left:50%;bottom:clamp(64px,9vh,88px);transform:translate(-50%,0);
     transition:opacity .45s ease, transform .5s cubic-bezier(.22,1,.36,1);
     width:min(860px,calc(100% - 28px));pointer-events:auto;
     display:flex;flex-wrap:wrap;align-items:center;gap:14px 20px;padding:13px 18px;border-radius:16px;
@@ -166,7 +166,7 @@
     <div class="hintbar">Bấm vào bảng để <b>sửa chữ trực tiếp trên bảng</b> · <b>✕</b> xoá dây đó · <b>＋ / −</b> thêm bớt dây — dây mới <b>tự chia đều</b> trên vòng tròn · Phím <b>N</b> = thêm dây</div>
   </div>
 
-  <button class="handle hidden" id="handle" type="button" title="Hiện thanh điều khiển (phím D)"><b>⌃</b> Điều khiển</button>
+  <button class="handle" id="handle" type="button" title="Mở/đóng thanh điều khiển (phím D)"><b>⌃</b> Điều khiển</button>
 </div>
 
 <script>
@@ -701,32 +701,21 @@ function buildSVG(names, angles, T){
                   (navigator.maxTouchPoints || 0) > 0;
   if (touchMode) document.body.classList.add('touch-mode');
 
+  /* ---------- thanh điều khiển: bấm thẻ để mở / bấm lần nữa để đóng ---------- */
   var dockEl = document.querySelector('.dock'), handleEl = document.getElementById('handle');
-  var dockTimer = null, dockHover = false, interacting = false;
-  function arm(){ clearTimeout(dockTimer); dockTimer = setTimeout(hideDock, 3200); }
-  function disarm(){ clearTimeout(dockTimer); }
-  function showDock(){
-    dockEl.classList.remove('hidden'); handleEl.classList.add('hidden');
-    disarm(); if (!dockHover && !interacting) arm();
+  var dockOpen = false;
+  function setDock(open){
+    dockOpen = open;
+    dockEl.classList.toggle('hidden', !open);
+    handleEl.querySelector('b').textContent = open ? '⌄' : '⌃';
+    handleEl.setAttribute('aria-expanded', String(open));
   }
-  function hideDock(){
-    if (dockHover || interacting){ arm(); return; }
-    dockEl.classList.add('hidden'); handleEl.classList.remove('hidden');
-  }
-  document.addEventListener('mousemove', function(e){
-    if (e.clientY > window.innerHeight - 150 || dockEl.contains(e.target)) showDock();
-    else arm();
-  });
-  dockEl.addEventListener('pointerenter', function(){ dockHover = true; disarm(); });
-  dockEl.addEventListener('pointerleave', function(){ dockHover = false; arm(); });
-  dockEl.addEventListener('pointerdown',  function(){ interacting = true; disarm(); });
-  window.addEventListener('pointerup',   function(){ interacting = false; arm(); });
-  handleEl.addEventListener('click', showDock);
+  handleEl.addEventListener('click', function(){ setDock(!dockOpen); });
   window.addEventListener('keydown', function(e){
     if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
-    if (e.key === 'd' || e.key === 'D') showDock();
+    if (e.key === 'd' || e.key === 'D') setDock(!dockOpen);
   });
-  arm();
+  setDock(false);
 
   document.getElementById('btnAdd').addEventListener('click', addAnchor);
   document.getElementById('btnAdd2').addEventListener('click', addAnchor);
@@ -803,5 +792,5 @@ function buildSVG(names, angles, T){
   if (!reduceMotion) requestAnimationFrame(frame);
 })();
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4544576dfa56e4c',t:'MTc5MTExNzc5Ng=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4546b5f5b534bac',t:'MTc5MTExOTM0OQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
