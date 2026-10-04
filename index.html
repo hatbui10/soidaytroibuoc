@@ -136,7 +136,7 @@
       </svg>
       <div>
         <h1>Sơ đồ neo treo</h1>
-        <p>người · vòng neo · bảng tên quanh vòng tròn · bản v8</p>
+        <p>người · vòng neo · bảng tên quanh vòng tròn · bản v10</p>
       </div>
     </div>
     <div class="stats mono">
@@ -284,6 +284,9 @@ function defs(){
     <linearGradient id="vigB" x1="0" y1="1" x2="0" y2="0">
       <stop offset="0" stop-color="#04070b" stop-opacity=".55"/><stop offset="1" stop-color="#04070b" stop-opacity="0"/>
     </linearGradient>
+    <linearGradient id="lune" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5ce1ff" stop-opacity=".62"/><stop offset="1" stop-color="#2a7fa8" stop-opacity=".28"/>
+    </linearGradient>
     <linearGradient id="vigL" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0" stop-color="#04070b" stop-opacity=".7"/><stop offset="1" stop-color="#04070b" stop-opacity="0"/>
     </linearGradient>
@@ -351,6 +354,25 @@ function photoLayer(){
          '<rect x="0" y="' + (VBH - 170) + '" width="' + VBW + '" height="170" fill="url(#vigB)"/>' +
          '<rect x="0" y="0" width="90" height="' + VBH + '" fill="url(#vigL)"/>' +
          '<rect x="' + (VBW - 90) + '" y="0" width="90" height="' + VBH + '" fill="url(#vigR)"/></g>';
+}
+
+/* Hai đường tròn tiếp xúc trong (chạm nhau 1 điểm), tô màu vành khăn giữa chúng, lòng vòng nhỏ để trống */
+var TANG = { rb: 170, rs: 130 }; /* rb−rs = 40 : bán kính chênh lệch */
+function circ(cx, cy, r){
+  return 'M ' + (cx - r) + ' ' + cy + ' a ' + r + ' ' + r + ' 0 1 0 ' + (2 * r) + ' 0 a ' + r + ' ' + r + ' 0 1 0 ' + (-(2 * r)) + ' 0 Z';
+}
+function tangentLayer(){
+  var rb = TANG.rb, rs = TANG.rs;
+  var bx = C.x, topY = C.y - 98;               /* đỉnh chung y=330 */
+  var bcx = bx, bcy = topY + rb;               /* vòng lớn: tâm (642, 500) r170 */
+  var scx = bx, scy = topY + rb + (rb - rs);   /* vòng nhỏ: tâm (642, 540) r130 — tiếp xúc trong tại điểm ĐÁY (642, 670) */
+  return '<g>' +
+    '<path d="' + circ(bcx, bcy, rb) + ' ' + circ(scx, scy, rs) + '" fill="url(#lune)" fill-rule="evenodd"/>' +
+    '<circle cx="' + bcx + '" cy="' + bcy + '" r="' + rb + '" fill="none" stroke="#7deaff" stroke-opacity=".85" stroke-width="2.6"/>' +
+    '<circle cx="' + scx + '" cy="' + scy + '" r="' + rs + '" fill="none" stroke="#7deaff" stroke-opacity=".85" stroke-width="2.6"/>' +
+    '<circle cx="' + bx + '" cy="' + (topY + 2 * rb) + '" r="5" fill="#bff3ff" fill-opacity=".95"/>' +
+    '<circle cx="' + bx + '" cy="' + (topY + 2 * rb) + '" r="9" fill="none" stroke="#bff3ff" stroke-opacity=".5" stroke-width="1.5"/>' +
+    '</g>';
 }
 
 function glowLayer(angles){
@@ -548,7 +570,7 @@ function ropeLayer(names, angles, T){
 }
 
 function buildSVG(names, angles, T){
-  return defs() + photoLayer() + glowLayer(angles) + ropeLayer(names, angles, T);
+  return defs() + photoLayer() + tangentLayer() + glowLayer(angles) + ropeLayer(names, angles, T);
 }
 /*==GEO-END==*/
 
@@ -838,5 +860,5 @@ function buildSVG(names, angles, T){
   if (!reduceMotion) requestAnimationFrame(frame);
 })();
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a454a2e1dd03ddc5',t:'MTc5MTEyMTYyMw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a454d634697709d8',t:'MTc5MTEyMzcyNQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
